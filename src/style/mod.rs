@@ -342,166 +342,132 @@ impl Overflow {
 #[cfg_attr(feature = "builder", builder(default))]
 pub struct Style {
     /// What layout strategy should be used?
-    #[cfg_attr(feature = "builder", builder(default = Style::default().display))]
     pub display: Display,
     /// Whether a child is display:table or not. This affects children of block layouts.
     /// This should really be part of `Display`, but it is currently seperate because table layout isn't implemented
-    #[cfg_attr(feature = "builder", builder(default = Style::default().item_is_table))]
     pub item_is_table: bool,
     /// Is it a replaced element like an image or form field?
     /// https://drafts.csswg.org/css-sizing-3/#min-content-zero
     pub item_is_replaced: bool,
     /// Should size styles apply to the content box or the border box of the node
-    #[cfg_attr(feature = "builder", builder(default = Style::default().box_sizing))]
     pub box_sizing: BoxSizing,
 
     // Overflow properties
     /// How children overflowing their container should affect layout
-    #[cfg_attr(feature = "builder", builder(default = Style::default().overflow))]
     pub overflow: Point<Overflow>,
     /// How much space (in points) should be reserved for the scrollbars of `Overflow::Scroll` and `Overflow::Auto` nodes.
-    #[cfg_attr(feature = "builder", builder(default = Style::default().scrollbar_width))]
     pub scrollbar_width: f32,
 
     // Position properties
     /// What should the `position` value of this struct use as a base offset?
-    #[cfg_attr(feature = "builder", builder(default = Style::default().position))]
     pub position: Position,
     /// How should the position of this element be tweaked relative to the layout defined?
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().inset))]
     pub inset: Rect<LengthPercentageAuto>,
 
     // Size properties
     /// Sets the initial size of the item
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().size))]
     pub size: Size<Dimension>,
     /// Controls the minimum size of the item
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().min_size))]
     pub min_size: Size<Dimension>,
     /// Controls the maximum size of the item
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().max_size))]
     pub max_size: Size<Dimension>,
     /// Sets the preferred aspect ratio for the item
     ///
     /// The ratio is calculated as width divided by height.
-    #[cfg_attr(feature = "builder", builder(default = Style::default().aspect_ratio))]
     pub aspect_ratio: Option<f32>,
 
     // Spacing Properties
     /// How large should the margin be on each side?
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().margin))]
     pub margin: Rect<LengthPercentageAuto>,
     /// How large should the padding be on each side?
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().padding))]
     pub padding: Rect<LengthPercentage>,
     /// How large should the border be on each side?
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().border))]
     pub border: Rect<LengthPercentage>,
 
     // Alignment properties
     /// How this node's children aligned in the cross/block axis?
     #[cfg(any(feature = "flexbox", feature = "grid"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().align_items))]
     pub align_items: Option<AlignItems>,
     /// How this node should be aligned in the cross/block axis
     /// Falls back to the parents [`AlignItems`] if not set
     #[cfg(any(feature = "flexbox", feature = "grid"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().align_self))]
     pub align_self: Option<AlignSelf>,
     /// How this node's children should be aligned in the inline axis
     #[cfg(feature = "grid")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().justify_items))]
     pub justify_items: Option<AlignItems>,
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`JustifyItems`] if not set
     #[cfg(feature = "grid")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().justify_self))]
     pub justify_self: Option<AlignSelf>,
     /// How should content contained within this item be aligned in the cross/block axis
     #[cfg(any(feature = "flexbox", feature = "grid"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().align_content))]
     pub align_content: Option<AlignContent>,
     /// How should content contained within this item be aligned in the main/inline axis
     #[cfg(any(feature = "flexbox", feature = "grid"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().justify_content))]
     pub justify_content: Option<JustifyContent>,
     /// How large should the gaps between items in a grid or flex container be?
     #[cfg(any(feature = "flexbox", feature = "grid"))]
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().gap))]
     pub gap: Size<LengthPercentage>,
 
     // Block container properties
     /// How items elements should aligned in the inline axis
     #[cfg(feature = "block_layout")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().text_align))]
     pub text_align: TextAlign,
 
     // Flexbox container properties
     /// Which direction does the main axis flow in?
     #[cfg(feature = "flexbox")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().flex_direction))]
     pub flex_direction: FlexDirection,
     /// Should elements wrap, or stay in a single line?
     #[cfg(feature = "flexbox")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().flex_wrap))]
     pub flex_wrap: FlexWrap,
 
     // Flexbox item properties
     /// Sets the initial main axis size of the item
     #[cfg(feature = "flexbox")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().flex_basis))]
     pub flex_basis: Dimension,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
     /// 0.0 is the default value, and this value must be positive.
     #[cfg(feature = "flexbox")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().flex_grow))]
     pub flex_grow: f32,
     /// The relative rate at which this item shrinks when it is contracting to fit into space
     ///
     /// 1.0 is the default value, and this value must be positive.
     #[cfg(feature = "flexbox")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().flex_shrink))]
     pub flex_shrink: f32,
 
     // Grid container properies
     /// Defines the track sizing functions (heights) of the grid rows
     #[cfg(feature = "grid")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().grid_template_rows))]
     pub grid_template_rows: GridTrackVec<TrackSizingFunction>,
     /// Defines the track sizing functions (widths) of the grid columns
     #[cfg(feature = "grid")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().grid_template_columns))]
     pub grid_template_columns: GridTrackVec<TrackSizingFunction>,
     /// Defines the size of implicitly created rows
     #[cfg(feature = "grid")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().grid_auto_rows))]
     pub grid_auto_rows: GridTrackVec<NonRepeatedTrackSizingFunction>,
     /// Defined the size of implicitly created columns
     #[cfg(feature = "grid")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().grid_auto_columns))]
     pub grid_auto_columns: GridTrackVec<NonRepeatedTrackSizingFunction>,
     /// Controls how items get placed into the grid for auto-placed items
     #[cfg(feature = "grid")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().grid_auto_flow))]
     pub grid_auto_flow: GridAutoFlow,
 
     // Grid child properties
     /// Defines which row in the grid the item should start and end at
     #[cfg(feature = "grid")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().grid_row))]
     pub grid_row: Line<GridPlacement>,
     /// Defines which column in the grid the item should start and end at
     #[cfg(feature = "grid")]
-    #[cfg_attr(feature = "builder", builder(default = Style::default().grid_column))]
     pub grid_column: Line<GridPlacement>,
 }
 
