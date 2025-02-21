@@ -11,6 +11,7 @@ struct StyleNode {
     node_id_handle: Option<NodeIdHandle>,
 }
 
+#[derive(Debug, Clone)]
 struct NodeIdHandle(Rc<RefCell<Option<NodeId>>>);
 
 impl NodeIdHandle {
@@ -63,8 +64,13 @@ impl StyleNode {
     }
 
     /// Allows for adding a child node.
-    fn child(&mut self, style_node: StyleNode) -> &mut StyleNode {
-        self.children.push(Box::new(style_node));
+    fn child<F>(&mut self, f: F) -> &mut StyleNode
+    where
+        F: FnOnce(&mut StyleNode),
+    {
+        let mut child_node = StyleNode::new();
+        f(&mut child_node);
+        self.children.push(Box::new(child_node));
         self
     }
 
@@ -76,14 +82,109 @@ impl StyleNode {
 
     /// Materialize the node and all its children into the provided tree.
     fn build(&self, tree: &mut TaffyTree) -> TaffyBuilderResult<NodeId> {
-        let root_id = tree.new_leaf(self.style_builder.build()?)?;
+        let style = self.style_builder.build()?;
+        let node_id = tree.new_leaf(style)?;
 
         if let Some(node_id_handle) = self.node_id_handle.as_ref() {
-            node_id_handle.set(root_id);
+            node_id_handle.set(node_id);
         }
 
-        self.children.iter().try_for_each(|child| child.build(tree).map(|_| ()))?;
+        let children_node_ids: Result<Vec<_>, _> = self.children.iter().map(|child| child.build(tree)).collect();
 
-        Ok(root_id)
+        match children_node_ids {
+            Ok(children_node_ids) => {
+                tree.set_children(node_id, &children_node_ids)?;
+                Ok(node_id)
+            }
+            Err(error) => Err(error),
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        prelude::{auto, length, TaffyMaxContent},
+        tree::builder::{NodeIdHandle, StyleNode},
+        FlexDirection, Size, Style, TaffyTree,
+    };
+
+    #[test]
+    fn readme_example() {
+        let mut tree: TaffyTree<()> = TaffyTree::new();
+        let header_node = tree
+            .new_leaf(Style { size: Size { width: length(800.0), height: length(100.0) }, ..Default::default() })
+            .unwrap();
+
+        let body_node = tree
+            .new_leaf(Style {
+                size: Size { width: length(800.0), height: auto() },
+                flex_grow: 1.0,
+                ..Default::default()
+            })
+            .unwrap();
+
+        let root_node = tree
+            .new_with_children(
+                Style {
+                    flex_direction: FlexDirection::Column,
+                    size: Size { width: length(800.0), height: length(600.0) },
+                    ..Default::default()
+                },
+                &[header_node, body_node],
+            )
+            .unwrap();
+
+        tree.compute_layout(root_node, Size::MAX_CONTENT).unwrap();
+
+        let mut builder_tree: TaffyTree<()> = TaffyTree::new();
+        let header_node_handle = NodeIdHandle::new();
+        let body_node_handle = NodeIdHandle::new();
+
+        let builder_root_node = StyleNode::new()
+            .style(|s| {
+                s.flex_direction(FlexDirection::Column).size(Size { width: length(800.0), height: length(600.0) });
+            })
+            .child(|c| {
+                c.style(|s| {
+                    s.size(Size { width: length(800.0), height: length(100.0) });
+                })
+                .handle(Some(header_node_handle.clone()));
+            })
+            .child(|c| {
+                c.style(|s| {
+                    s.size(Size { width: length(800.0), height: auto() }).flex_grow(1.0);
+                })
+                .handle(Some(body_node_handle.clone()));
+            })
+            .build(&mut builder_tree)
+            .unwrap();
+
+        builder_tree.compute_layout(builder_root_node, Size::MAX_CONTENT).unwrap();
+
+        assert_eq!(
+            tree.layout(root_node).unwrap().size.width,
+            builder_tree.layout(builder_root_node).unwrap().size.width
+        );
+        assert_eq!(
+            tree.layout(root_node).unwrap().size.height,
+            builder_tree.layout(builder_root_node).unwrap().size.height
+        );
+        assert_eq!(
+            tree.layout(header_node).unwrap().size.width,
+            builder_tree.layout(header_node_handle.get().unwrap()).unwrap().size.width
+        );
+        assert_eq!(
+            tree.layout(header_node).unwrap().size.height,
+            builder_tree.layout(header_node_handle.get().unwrap()).unwrap().size.height
+        );
+        assert_eq!(
+            tree.layout(body_node).unwrap().size.width,
+            builder_tree.layout(body_node_handle.get().unwrap()).unwrap().size.width
+        );
+        assert_eq!(
+            tree.layout(body_node).unwrap().size.height,
+            builder_tree.layout(body_node_handle.get().unwrap()).unwrap().size.height
+        );
     }
 }
