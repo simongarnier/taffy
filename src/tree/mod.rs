@@ -4,7 +4,6 @@
 //! - For documentation on the low-level trait-based API, see the [`traits`] module.
 
 // Submodules
-mod builder;
 mod cache;
 mod layout;
 mod node;

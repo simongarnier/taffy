@@ -1,6 +1,7 @@
 //! A typed representation of [CSS style properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust. Used as input to layout computation.
 mod alignment;
 mod available_space;
+mod builder;
 mod compact_length;
 mod dimension;
 
@@ -13,6 +14,7 @@ mod grid;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::available_space::AvailableSpace;
+pub use self::builder::StyleBuilder;
 pub use self::compact_length::CompactLength;
 pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
 
@@ -338,8 +340,6 @@ impl Overflow {
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
-#[cfg_attr(feature = "builder", derive(Builder))]
-#[cfg_attr(feature = "builder", builder(default))]
 pub struct Style {
     /// What layout strategy should be used?
     pub display: Display,
@@ -948,7 +948,7 @@ impl<T: GridItemStyle> GridItemStyle for &'_ T {
 
 #[cfg(test)]
 mod tests {
-    use super::{Style, StyleBuilder};
+    use super::Style;
     use crate::{geometry::*, style_helpers::TaffyAuto as _};
 
     #[test]
@@ -1015,20 +1015,6 @@ mod tests {
 
         assert_eq!(Style::DEFAULT, Style::default());
         assert_eq!(Style::DEFAULT, old_defaults);
-    }
-
-    #[test]
-    fn builder_defaults_match_defaults() {
-        assert_eq!(StyleBuilder::default().build().unwrap(), Style::default())
-    }
-
-    #[test]
-    fn builder_can_set_field() {
-        let aspect_ratio = Some(1.43 / 1.0);
-        assert_eq!(
-            StyleBuilder::default().aspect_ratio(aspect_ratio).build().unwrap(),
-            Style { aspect_ratio, ..Default::default() }
-        )
     }
 
     // NOTE: Please feel free the update the sizes in this test as required. This test is here to prevent unintentional size changes

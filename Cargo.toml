@@ -23,7 +23,6 @@ serde = { version = "1.0", default-features = false, optional = true, features =
 ] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
 grid = { version = "0.16.0", default-features = false, optional = true }
-derive_builder = { version = "0.20.0", optional = true }
 
 [package.metadata.docs.rs]
 # To test all the documentation related features, run:
@@ -44,7 +43,6 @@ default = [
     "calc",
     "content_size",
     "detailed_layout_info",
-    "builder",
 ]
 #! ## Feature Flags
 #!
@@ -82,8 +80,6 @@ alloc = ["serde?/alloc"]
 debug = ["std"]
 ## Internal feature for profiling
 profile = ["std"]
-## Expose builder API for Styles and Nodes
-builder = ["dep:derive_builder"]
 
 [dev-dependencies]
 serde_json = "1.0.93"
