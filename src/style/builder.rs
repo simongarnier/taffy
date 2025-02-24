@@ -7,50 +7,18 @@ use crate::{sys::GridTrackVec, Line, NodeId, Point, Rect, Size, TaffyResult, Taf
 use core::cell::RefCell;
 use std::rc::Rc;
 
-#[derive(Debug, Default)]
-pub struct StyleBuilder<'a> {
-    children: Vec<&'a StyleBuilder<'a>>,
-    ref_handle: Option<RefHandle>,
-
-    display: Option<Display>,
-    item_is_table: Option<bool>,
-    box_sizing: Option<BoxSizing>,
-    overflow: Option<Point<Overflow>>,
-    scrollbar_width: Option<f32>,
-    position: Option<Position>,
-    inset: Option<Rect<LengthPercentageAuto>>,
-    size: Option<Size<Dimension>>,
-    min_size: Option<Size<Dimension>>,
-    max_size: Option<Size<Dimension>>,
-    aspect_ratio: Option<Option<f32>>,
-    margin: Option<Rect<LengthPercentageAuto>>,
-    padding: Option<Rect<LengthPercentage>>,
-    border: Option<Rect<LengthPercentage>>,
-    align_items: Option<Option<AlignItems>>,
-    align_self: Option<Option<AlignSelf>>,
-    justify_items: Option<Option<AlignItems>>,
-    justify_self: Option<Option<AlignSelf>>,
-    align_content: Option<Option<AlignContent>>,
-    justify_content: Option<Option<JustifyContent>>,
-    gap: Option<Size<LengthPercentage>>,
-    text_align: Option<TextAlign>,
-    flex_direction: Option<FlexDirection>,
-    flex_wrap: Option<FlexWrap>,
-    flex_basis: Option<Dimension>,
-    flex_grow: Option<f32>,
-    flex_shrink: Option<f32>,
-    grid_template_rows: Option<GridTrackVec<TrackSizingFunction>>,
-    grid_template_columns: Option<GridTrackVec<TrackSizingFunction>>,
-    grid_auto_rows: Option<GridTrackVec<NonRepeatedTrackSizingFunction>>,
-    grid_auto_columns: Option<GridTrackVec<NonRepeatedTrackSizingFunction>>,
-    grid_auto_flow: Option<GridAutoFlow>,
-    grid_row: Option<Line<GridPlacement>>,
-    grid_column: Option<Line<GridPlacement>>,
-}
-
 /// some macro
 macro_rules! builder_fields {
     ($builder:ident, $($field:ident: $type:ty),* $(,)?) => {
+        #[derive(Debug, Default)]
+        pub struct StyleBuilder<'a> {
+            children: Vec<&'a StyleBuilder<'a>>,
+            ref_handle: Option<RefHandle>,
+            $(
+                $field: Option<$type>,
+            )*
+        }
+
         impl<'a> $builder<'a> {
             $(
                 #[doc = concat!("Will set the `", stringify!($field), "` field to the provided value in the")]
@@ -62,12 +30,16 @@ macro_rules! builder_fields {
                 }
             )*
             fn build_style(&self) -> Style {
-                let default = Style::default();
-                Style {
-                    $(
-                        $field: Clone::clone(&self.$field).unwrap_or(Clone::clone(&default.$field)),
-                    )*
+                let mut style = Style::default();
+
+                $(
+                if let Some(ref value) = self.$field {
+                    style.$field = Clone::clone(value);
                 }
+                )*
+
+                style
+
             }
         }
     };
