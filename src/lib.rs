@@ -79,10 +79,6 @@ extern crate alloc;
 #[cfg(feature = "serde")]
 extern crate serde;
 
-#[cfg_attr(feature = "builder", macro_use)]
-#[cfg(feature = "builder")]
-extern crate derive_builder;
-
 pub mod compute;
 pub mod geometry;
 pub mod prelude;

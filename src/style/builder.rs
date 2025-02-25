@@ -1,26 +1,39 @@
 use super::{
-    AlignContent, AlignItems, AlignSelf, BoxSizing, Dimension, Display, FlexDirection, FlexWrap, GridAutoFlow,
-    GridPlacement, JustifyContent, LengthPercentage, LengthPercentageAuto, NonRepeatedTrackSizingFunction, Overflow,
-    Position, Style, TextAlign, TrackSizingFunction,
+    AlignContent, AlignItems, AlignSelf, BoxSizing, Dimension, Display, JustifyContent, LengthPercentage,
+    LengthPercentageAuto, Overflow, Position, Style,
 };
-use crate::{sys::GridTrackVec, Line, NodeId, Point, Rect, Size, TaffyResult, TaffyTree};
+use crate::{util::sys::Vec, Line, NodeId, Point, Rect, Size, TaffyResult, TaffyTree};
 use core::cell::RefCell;
 use std::rc::Rc;
 
+#[cfg(feature = "flexbox")]
+use super::{FlexDirection, FlexWrap};
+#[cfg(feature = "grid")]
+use {
+    super::{GridAutoFlow, GridPlacement, NonRepeatedTrackSizingFunction, TrackSizingFunction},
+    crate::sys::GridTrackVec,
+};
+
 /// some macro
-macro_rules! builder_fields {
-    ($builder:ident, $($field:ident: $type:ty),* $(,)?) => {
+macro_rules! builder {
+    // Change how we capture the cfg condition
+    ($builder:ident, $(($field:ident: $type:ty $(, cfg: $($cfg:tt)+)?)),* $(,)?) => {
+        /**
+        * use `StyleBuilder` to construct a tree of nested style.
+        */
         #[derive(Debug, Default)]
         pub struct StyleBuilder<'a> {
             children: Vec<&'a StyleBuilder<'a>>,
             ref_handle: Option<RefHandle>,
             $(
+                $(#[cfg($($cfg)+)])?
                 $field: Option<$type>,
             )*
         }
 
         impl<'a> $builder<'a> {
             $(
+                $(#[cfg($($cfg)+)])?
                 #[doc = concat!("Will set the `", stringify!($field), "` field to the provided value in the")]
                 #[doc = "\nresulting [`Style`](super::Style) when the [`build`](StyleBuilder::build) method is called."]
                 #[doc = concat!("\n\nSee [`Style::", stringify!($field), "`](super::Style::", stringify!($field), ").")]
@@ -29,61 +42,60 @@ macro_rules! builder_fields {
                     self
                 }
             )*
+
             fn build_style(&self) -> Style {
                 let mut style = Style::default();
 
                 $(
-                if let Some(ref value) = self.$field {
-                    style.$field = Clone::clone(value);
-                }
+                    $(#[cfg($($cfg)+)])?
+                    if let Some(ref value) = self.$field {
+                        style.$field = Clone::clone(value);
+                    }
                 )*
 
                 style
-
             }
         }
     };
 }
 
-builder_fields!(
+builder!(
     StyleBuilder,
-    display: Display,
-    item_is_table: bool,
-    box_sizing: BoxSizing,
-    overflow: Point<Overflow>,
-    scrollbar_width: f32,
-    position: Position,
-    inset: Rect<LengthPercentageAuto>,
-    size: Size<Dimension>,
-    min_size: Size<Dimension>,
-    max_size: Size<Dimension>,
-    aspect_ratio: Option<f32>,
-    margin: Rect<LengthPercentageAuto>,
-    padding: Rect<LengthPercentage>,
-    border: Rect<LengthPercentage>,
-    align_items: Option<AlignItems>,
-    align_self: Option<AlignSelf>,
-    justify_items: Option<AlignItems>,
-    justify_self: Option<AlignSelf>,
-    align_content: Option<AlignContent>,
-    justify_content: Option<JustifyContent>,
-    gap: Size<LengthPercentage>,
-    text_align: TextAlign,
-    flex_direction: FlexDirection,
-    flex_wrap: FlexWrap,
-    flex_basis: Dimension,
-    flex_grow: f32,
-    flex_shrink: f32,
-    grid_template_rows: GridTrackVec<TrackSizingFunction>,
-    grid_template_columns: GridTrackVec<TrackSizingFunction>,
-    grid_auto_rows: GridTrackVec<NonRepeatedTrackSizingFunction>,
-    grid_auto_columns: GridTrackVec<NonRepeatedTrackSizingFunction>,
-    grid_auto_flow: GridAutoFlow,
-    grid_row: Line<GridPlacement>,
-    grid_column: Line<GridPlacement>,
+    (display: Display),
+    (item_is_table: bool),
+    (box_sizing: BoxSizing),
+    (overflow: Point<Overflow>),
+    (scrollbar_width: f32),
+    (position: Position),
+    (inset: Rect<LengthPercentageAuto>),
+    (size: Size<Dimension>),
+    (min_size: Size<Dimension>),
+    (max_size: Size<Dimension>),
+    (aspect_ratio: Option<f32>),
+    (margin: Rect<LengthPercentageAuto>),
+    (padding: Rect<LengthPercentage>),
+    (border: Rect<LengthPercentage>),
+    (align_items: Option<AlignItems>, cfg: any(feature = "flexbox", feature = "grid")),
+    (align_self: Option<AlignSelf>, cfg: any(feature = "flexbox", feature = "grid")),
+    (justify_items: Option<AlignItems>, cfg: feature = "grid"),
+    (justify_self: Option<AlignSelf>, cfg: feature = "grid"),
+    (align_content: Option<AlignContent>, cfg: any(feature = "flexbox", feature = "grid")),
+    (justify_content: Option<JustifyContent>, cfg: any(feature = "flexbox", feature = "grid")),
+    (gap: Size<LengthPercentage>, cfg: any(feature = "flexbox", feature = "grid")),
+    (text_align: super::TextAlign, cfg: feature = "block_layout"),
+    (flex_direction: FlexDirection, cfg: feature = "flexbox"),
+    (flex_wrap: FlexWrap, cfg: feature = "flexbox"),
+    (flex_basis: Dimension, cfg: feature = "flexbox"),
+    (flex_grow: f32, cfg: feature = "flexbox"),
+    (flex_shrink: f32, cfg: feature = "flexbox"),
+    (grid_template_rows: GridTrackVec<TrackSizingFunction>, cfg: feature = "grid"),
+    (grid_template_columns: GridTrackVec<TrackSizingFunction>, cfg: feature = "grid"),
+    (grid_auto_rows: GridTrackVec<NonRepeatedTrackSizingFunction>, cfg: feature = "grid"),
+    (grid_auto_columns: GridTrackVec<NonRepeatedTrackSizingFunction>, cfg: feature = "grid"),
+    (grid_auto_flow: GridAutoFlow, cfg: feature = "grid"),
+    (grid_row: Line<GridPlacement>, cfg: feature = "grid"),
+    (grid_column: Line<GridPlacement>, cfg: feature = "grid"),
 );
-
-// build_style_method!(StyleBuilder, display, item_is_table, box_sizing);
 
 #[derive(Debug, Clone)]
 struct RefHandle(Rc<RefCell<Option<NodeId>>>);
