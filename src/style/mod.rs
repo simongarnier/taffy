@@ -1,12 +1,13 @@
 //! A typed representation of [CSS style properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust. Used as input to layout computation.
 mod alignment;
 mod available_space;
-mod builder;
 mod compact_length;
 mod dimension;
 
 #[cfg(feature = "block_layout")]
 mod block;
+#[cfg(feature = "builder")]
+mod builder;
 #[cfg(feature = "flexbox")]
 mod flex;
 #[cfg(feature = "grid")]
@@ -14,12 +15,13 @@ mod grid;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::available_space::AvailableSpace;
-pub use self::builder::StyleBuilder;
 pub use self::compact_length::CompactLength;
 pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
+#[cfg(feature = "builder")]
+pub use self::builder::{NodeIdRef, StyleBuilder};
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
