@@ -49,7 +49,33 @@ impl NodeIdRef {
 ///     * A `build_style` method, used to generate a [`Style`](super::Style) based on data stored in the builder
 macro_rules! gen_builder {
     ($builder:ident, $(($field:ident: $type:ty $(, cfg: $($cfg:tt)+)?)),* $(,)?) => {
-        /// Use `StyleBuilder` to construct a tree of nested style.
+        /// Use [`StyleBuilder`] to construct a tree of nested style nodes.
+        ///
+        /// Example :
+        /// ```rust
+        /// # use taffy::prelude::*;
+        /// let mut builder_tree: TaffyTree<()> = TaffyTree::new();
+        /// let header_node_handle = NodeIdRef::new();
+        /// let body_node_handle = NodeIdRef::new();
+        ///
+        /// let builder_root_node = StyleBuilder::new()
+        ///     .flex_direction(FlexDirection::Column)
+        ///     .size(Size { width: length(800.0), height: length(600.0) })
+        ///     .child(
+        ///         StyleBuilder::new().width(length(800.0)).height(length(100.0)).node_id_ref(header_node_handle.clone()),
+        ///     )
+        ///     .child(
+        ///         StyleBuilder::new()
+        ///             .width(length(800.0))
+        ///             .height(auto())
+        ///             .flex_grow(1.0)
+        ///             .node_id_ref(body_node_handle.clone()),
+        ///     )
+        ///     .build(&mut builder_tree)
+        ///     .unwrap();
+        ///
+        /// builder_tree.compute_layout(builder_root_node, Size::MAX_CONTENT).unwrap();
+        /// ```
         #[derive(Debug, Default)]
         pub struct $builder<'a> {
             children: Vec<&'a StyleBuilder<'a>>,
